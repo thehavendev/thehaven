@@ -107,6 +107,11 @@ button {
   gap: 24px;
 }
 
+/* ensure positioned parent for absolute mobile menu */
+.topbar {
+  position: relative;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -1814,9 +1819,9 @@ button {
 
   .nav-links {
     position: absolute;
-    left: 16px;
-    right: 16px;
-    top: 82px;
+    left: 12px;
+    right: 12px;
+    top: 100%;
     display: none;
     flex-direction: column;
     background: rgba(255, 255, 255, 0.96);
@@ -1824,6 +1829,7 @@ button {
     border-radius: 18px;
     padding: 18px 16px;
     box-shadow: var(--shadow-soft);
+    z-index: 60;
   }
 
   .nav-links.open {
@@ -1832,6 +1838,18 @@ button {
 
   .nav-toggle {
     display: inline-block;
+  }
+
+  .nav-links a {
+    display: block;
+    padding: 10px 6px;
+    width: 100%;
+    border-radius: 10px;
+    color: var(--color-forest);
+  }
+
+  .nav-links a:not(.button) {
+    font-weight: 700;
   }
 }
 
@@ -1959,6 +1977,11 @@ button {
   }
 
   .brand-copy small {
+    display: none;
+  }
+
+  /* hide the secondary brand copy to save space on very small screens */
+  .brand-copy {
     display: none;
   }
 
