@@ -1189,6 +1189,9 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
   }
 
   if (!adminSession.loggedIn) {
+    const [loginError, setLoginError] = useState('')
+    const [loggingIn, setLoggingIn] = useState(false)
+
     return (
       <main className="page-shell admin-login-shell">
         <section className="container admin-login-wrap">
@@ -1198,9 +1201,18 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
             <p>Manage donor conversations, payment coordination, and support requests for The Haven.</p>
             <form
               className="admin-login-form"
-              onSubmit={(event) => {
+              onSubmit={async (event) => {
                 event.preventDefault()
-                onLogin(adminLogin.email, adminLogin.password)
+                setLoginError('')
+                setLoggingIn(true)
+                try {
+                  const ok = await onLogin(adminLogin.email, adminLogin.password)
+                  if (!ok) setLoginError('Login failed — check credentials and try again.')
+                } catch (e) {
+                  setLoginError('Login failed — network or server error.')
+                } finally {
+                  setLoggingIn(false)
+                }
               }}
             >
               <label>
@@ -1211,8 +1223,9 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
                 Password
                 <input type="password" value={adminLogin.password} onChange={(event) => setAdminLogin((current) => ({ ...current, password: event.target.value }))} required />
               </label>
-              <button type="submit" className="button button-primary full-width">Sign In</button>
+              <button type="submit" className="button button-primary full-width" disabled={loggingIn}>{loggingIn ? 'Signing in…' : 'Sign In'}</button>
             </form>
+            {loginError && <div className="error-box" style={{ marginTop: '12px' }}>{loginError}</div>}
             <div className="login-notice">
               <strong>Official support inbox:</strong> {OFFICIAL_EMAIL}
             </div>
