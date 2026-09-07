@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
 import './App.css'
+import logo from './assets/logo.svg'
 
 const OFFICIAL_EMAIL = 'contact.thehavenfoundation.org@gmail.com'
 
@@ -314,7 +315,9 @@ function Navbar() {
     <header className="site-header">
       <nav className="topbar" aria-label="Main navigation">
         <NavLink to="/" className="brand" aria-label="The Haven home">
-          <span className="brand-mark">TH</span>
+          <span className="brand-mark has-image">
+            <img src={logo} alt="The Haven logo" />
+          </span>
           <span className="brand-copy">
             <strong>The Haven</strong>
             <small>Every Child Deserves a Haven.</small>

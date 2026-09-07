@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">The Haven logo</title>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#AC8A47" />
+      <stop offset="1" stop-color="#123B30" />
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="20" fill="#F9F5F1" />
+  <circle cx="60" cy="40" r="22" fill="url(#g)" opacity="0.12" />
+  <g transform="translate(0,6)">
+    <text x="50%" y="64%" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="44" fill="#123B30">TH</text>
+  </g>
+</svg>
