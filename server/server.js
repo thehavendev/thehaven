@@ -57,7 +57,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
 `)
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@thehaven.org'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@thehaven.health'
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'TheHaven2026!'
 const EMAIL_TO = process.env.EMAIL_TO || 'contact.thehavenfoundation.org@gmail.com'
 const JWT_SECRET = process.env.JWT_SECRET || 'thehaven-chat-secret'

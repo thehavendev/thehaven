@@ -158,7 +158,7 @@ const adminStats = [
   { label: 'Recent Donations', value: '17' },
 ]
 
-const API_BASE = 'http://localhost:4001'
+const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:4001' : window.location.origin)
 
 const representativeChats = [
   {
@@ -1571,7 +1571,7 @@ function App() {
   }, [adminSession.loggedIn, adminSession.token])
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:4001')
+    const socket = new WebSocket(import.meta.env.VITE_WS_URL || API_BASE.replace(/^http/, 'ws'))
 
     socket.onmessage = (event) => {
       try {
