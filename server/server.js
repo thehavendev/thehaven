@@ -44,6 +44,14 @@ db.exec(`
     FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS admin_logs (
+    id TEXT PRIMARY KEY,
+    admin_email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status);
   CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations(updated_at);
   CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
@@ -169,7 +177,7 @@ async function sendAdminNotification(conversation) {
     <p><strong>Donation Commitment:</strong> $${Number(conversation.donation_amount).toFixed(2)} ${conversation.donation_currency || 'USD'}</p>
     <p><strong>Frequency:</strong> ${conversation.donation_frequency}</p>
     <p><strong>Message:</strong> ${conversation.first_message || 'No message provided.'}</p>
-    <p><a href="http://localhost:5173/admin" target="_blank" rel="noreferrer">Open Administrator Conversation</a></p>
+    <p><a href="${process.env.ADMIN_UI_URL || 'http://localhost:5173'}/admin" target="_blank" rel="noreferrer">Open Administrator Conversation</a></p>
   `
 
   const transporterConfig = {
@@ -215,6 +223,13 @@ app.post('/api/auth/admin/login', (req, res) => {
   }
 
   const token = createToken({ email, role: 'admin', exp: Date.now() + 1000 * 60 * 60 * 12 })
+
+  try {
+    db.prepare(`INSERT INTO admin_logs (id, admin_email, action, details, created_at) VALUES (?, ?, ?, ?, ?)`)
+      .run(randomUUID(), email, 'login', JSON.stringify({ ip: req.ip || '' }), new Date().toISOString())
+  } catch (e) {
+    console.error('Failed to write admin login log', e)
+  }
   return res.json({ token, user: email })
 })
 
@@ -346,6 +361,19 @@ app.post('/api/chat/conversations/:id/messages', (req, res) => {
   const conversation = sanitizeConversation(db.prepare('SELECT * FROM conversations WHERE id = ?').get(id))
   broadcastChatEvent({ event: 'message-sent', conversation })
 
+  // If a customer sent a message, notify admins via email (queued if SMTP not configured)
+  if (safeSenderType === 'CUSTOMER') {
+    // send minimal conversation info including last message
+    sendAdminNotification({
+      customer_name: conversation.customer_name,
+      customer_email: conversation.customer_email,
+      donation_amount: conversation.donation_amount,
+      donation_currency: conversation.donation_currency,
+      donation_frequency: conversation.donation_frequency,
+      first_message: String(message).trim(),
+    }).catch((err) => console.error('Failed to send admin notification:', err))
+  }
+
   res.status(201).json({
     id: messageId,
     conversation_id: id,
@@ -383,6 +411,14 @@ app.patch('/api/admin/conversations/:id/status', isAdminAuthenticated, (req, res
     INSERT INTO messages (id, conversation_id, sender_type, sender_id, message, created_at, read_at)
     VALUES (?, ?, 'SYSTEM', ?, ?, ?, NULL)
   `).run(randomUUID(), id, `admin-${req.adminEmail}`, `Conversation status updated to ${normalized}.`, now)
+
+  // admin log
+  try {
+    db.prepare(`INSERT INTO admin_logs (id, admin_email, action, details, created_at) VALUES (?, ?, ?, ?, ?)`)
+      .run(randomUUID(), req.adminEmail, 'status-update', JSON.stringify({ conversation_id: id, status: normalized }), now)
+  } catch (e) {
+    console.error('Failed to write admin log', e)
+  }
 
   const conversation = sanitizeConversation(db.prepare('SELECT * FROM conversations WHERE id = ?').get(id))
   broadcastChatEvent({ event: 'status-updated', conversation })
@@ -422,6 +458,14 @@ app.post('/api/admin/conversations/:id/messages', isAdminAuthenticated, (req, re
   const conversation = sanitizeConversation(db.prepare('SELECT * FROM conversations WHERE id = ?').get(id))
   broadcastChatEvent({ event: 'admin-reply', conversation })
 
+  // admin log for replies
+  try {
+    db.prepare(`INSERT INTO admin_logs (id, admin_email, action, details, created_at) VALUES (?, ?, ?, ?, ?)`)
+      .run(randomUUID(), req.adminEmail, 'reply', JSON.stringify({ conversation_id: id, message: String(message).trim() }), now)
+  } catch (e) {
+    console.error('Failed to write admin reply log', e)
+  }
+
   res.status(201).json({
     id: messageId,
     conversation_id: id,
@@ -442,6 +486,11 @@ app.get('/api/chat/conversations/:id', (req, res) => {
   }
 
   return res.json(sanitizeConversation(row))
+})
+
+app.get('/api/admin/logs', isAdminAuthenticated, (req, res) => {
+  const rows = db.prepare(`SELECT id, admin_email, action, details, created_at FROM admin_logs ORDER BY created_at DESC LIMIT 200`).all()
+  return res.json({ logs: rows })
 })
 
 httpServer.listen(port, () => {
