@@ -161,100 +161,12 @@ const adminStats = [
 
 const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:4001' : 'https://thehaven.onrender.com')
 
-const representativeChats = [
-  {
-    id: 'CHAT-1041',
-    donor: 'Ava Thompson',
-    email: 'ava.thompson@gmail.com',
-    phone: '+1 (415) 555-0198',
-    status: 'NEW',
-    amount: 100,
-    frequency: 'MONTHLY',
-    lastUpdated: '2 min ago',
-    preview: 'Hello, I’d like to make a $100 monthly donation to The Haven.',
-    messages: [
-      { sender: 'donor', text: 'Hello, I’d like to make a $100 monthly donation to The Haven.', time: '09:14 AM' },
-      { sender: 'rep', text: 'Thank you for your interest in supporting The Haven. I can help with the next steps and payment instructions.', time: '09:16 AM' },
-    ],
-  },
-  {
-    id: 'CHAT-1048',
-    donor: 'Marcus Reid',
-    email: 'marcus.reid@email.com',
-    phone: '+1 (503) 555-1184',
-    status: 'PAYMENT PENDING',
-    amount: 250,
-    frequency: 'ONE-TIME',
-    lastUpdated: '18 min ago',
-    preview: 'I would like to speak about how my donation can support education.',
-    messages: [
-      { sender: 'donor', text: 'I would like to speak about how my donation can support education.', time: '08:47 AM' },
-      { sender: 'rep', text: 'Absolutely. A donation of this size can help support educational resources and learning programs.', time: '08:49 AM' },
-    ],
-  },
-  {
-    id: 'CHAT-1049',
-    donor: 'Lena Brooks',
-    email: 'lena.brooks@email.com',
-    phone: '+1 (206) 555-4741',
-    status: 'IN PROGRESS',
-    amount: 50,
-    frequency: 'MONTHLY',
-    lastUpdated: '40 min ago',
-    preview: 'Can I change the amount after the first conversation?',
-    messages: [
-      { sender: 'donor', text: 'Can I change the amount after the first conversation?', time: '08:05 AM' },
-      { sender: 'rep', text: 'Of course. We can adjust the commitment before payment is completed.', time: '08:11 AM' },
-    ],
-  },
-]
-
 function formatCurrency(value) {
   const numericValue = Number(value || 0)
   return `$${numericValue.toLocaleString('en-US')} USD`
 }
 
-function formatChatTime(value) {
-  if (!value) return 'Now'
-
-  try {
-    return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-  } catch {
-    return 'Now'
-  }
-}
-
-function normalizeConversation(conversation) {
-  const messages = Array.isArray(conversation?.messages) ? conversation.messages.map((message) => {
-    const sender = message.sender_type === 'ADMIN'
-      ? 'rep'
-      : message.sender_type === 'SYSTEM'
-        ? 'system'
-        : 'donor'
-
-    return {
-      id: message.id,
-      sender,
-      name: message.sender_type === 'ADMIN' ? 'Naomi Martin' : message.sender_type === 'SYSTEM' ? 'System' : conversation.customer_name || 'Supporter',
-      text: message.message,
-      time: formatChatTime(message.created_at),
-    }
-  }) : []
-
-  return {
-    id: conversation.id,
-    donor: conversation.customer_name || conversation.donor || 'Supporter',
-    email: conversation.customer_email || conversation.email || '',
-    phone: conversation.customer_phone || conversation.phone || '+1 (000) 000-0000',
-    status: conversation.status || 'NEW',
-    amount: Number(conversation.donation_amount ?? conversation.amount ?? 0),
-    frequency: conversation.donation_frequency || conversation.frequency || 'MONTHLY',
-    lastUpdated: 'Just now',
-    preview: conversation.last_message || messages.at(-1)?.text || 'New conversation started.',
-    messages,
-    created_at: conversation.created_at,
-  }
-}
+// Chat normalization and time formatting removed (live chat system disabled)
 
 function formatNumber(value, suffix = '') {
   const rounded = Number(value).toLocaleString('en-US')
@@ -500,115 +412,12 @@ function SupportPanel() {
   )
 }
 
-function DonationChat({ commitment, donorName = 'Supporter', onClose, chatId, initialMessages = [], onSendMessage }) {
-  const [input, setInput] = useState('')
-  const [messages, setMessages] = useState(
-    initialMessages.length > 0
-      ? initialMessages
-      : [
-          { sender: 'system', text: `Donation Commitment: ${formatCurrency(commitment.amount)} — ${commitment.frequency}`, time: 'Now' },
-          { sender: 'system', text: 'Hello! Thank you for choosing to support The Haven. A customer representative will assist you with completing your donation.', time: 'Now' },
-          { sender: 'rep', name: 'Naomi', text: `Hi ${donorName || 'friend'}, I am Naomi from The Haven support team. I can help with your donation and the safest next steps for payment.`, time: '09:18 AM' },
-        ],
-  )
-  const [repTyping, setRepTyping] = useState(true)
-  const [isSending, setIsSending] = useState(false)
-  const [isOffline, setIsOffline] = useState(false)
+// DonationChat removed (custom live-chat system disabled)
 
-  useEffect(() => {
-    const updateConnection = () => setIsOffline(!navigator.onLine)
-    updateConnection()
-    window.addEventListener('online', updateConnection)
-    window.addEventListener('offline', updateConnection)
-    return () => {
-      window.removeEventListener('online', updateConnection)
-      window.removeEventListener('offline', updateConnection)
-    }
-  }, [])
-
-  const sendMessage = (text) => {
-    const trimmed = text.trim()
-    if (!trimmed || isSending) return
-
-    setMessages((current) => [...current, { sender: 'donor', name: donorName || 'You', text: trimmed, time: 'Now' }])
-    setInput('')
-    setIsSending(true)
-    setRepTyping(true)
-    onSendMessage?.(chatId, trimmed)
-
-    window.setTimeout(() => {
-      const responseText =
-        commitment.frequency === 'MONTHLY'
-          ? 'Thank you for your monthly commitment. We can provide secure payment instructions once you confirm your preferred payment method and a safe way to proceed.'
-          : 'Thank you for your one-time commitment. I can walk you through the secure payment process and answer any questions without asking for sensitive financial credentials in chat.'
-
-      setMessages((current) => [...current, { sender: 'rep', name: 'Naomi', text: responseText, time: 'Just now' }])
-      setRepTyping(false)
-      setIsSending(false)
-    }, 900)
-  }
-
-  return (
-    <div className="chat-shell">
-      <div className="chat-header">
-        <div className="chat-profile">
-          <div className="avatar">N</div>
-          <div>
-            <strong>Naomi</strong>
-            <span>{isOffline ? 'Offline — temporarily disconnected' : 'Customer Support • Online'}</span>
-          </div>
-        </div>
-        <div className="chat-actions">
-          <button type="button" className="ghost-button" onClick={onClose}>Return to form</button>
-        </div>
-      </div>
-
-      <div className="chat-summary">
-        <span>Donation Commitment</span>
-        <strong>{formatCurrency(commitment.amount)}</strong>
-        <small>{commitment.frequency}</small>
-      </div>
-
-      {isOffline && <div className="chat-status-banner">You are offline. Your message will be queued for the next available representative.</div>}
-
-      <div className="chat-body">
-        {messages.map((message, index) => (
-          <div key={`${message.sender}-${index}`} className={`chat-bubble ${message.sender}`}>
-            {message.name && <span className="bubble-author">{message.name}</span>}
-            <p>{message.text}</p>
-            <time>{message.time}</time>
-          </div>
-        ))}
-
-        {repTyping && (
-          <div className="chat-bubble rep typing">
-            <span className="bubble-author">Naomi</span>
-            <div className="typing-dots"><span /><span /><span /></div>
-          </div>
-        )}
-      </div>
-
-      <div className="chat-security-note">
-        <strong>Secure guidance:</strong> Our team never requests card numbers, CVV, passwords, PINs, or authentication codes in chat.
-      </div>
-
-      <div className="chat-input-row">
-        <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message..." disabled={isOffline} />
-        <button type="button" className="button button-primary" onClick={() => sendMessage(input)} disabled={isOffline || isSending}>
-          {isSending ? 'Sending...' : 'Send'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function HomePage({ onNewChatStarted, onDonorMessage }) {
+function HomePage() {
   const [selectedTestimonial, setSelectedTestimonial] = useState(0)
   const [activeFaq, setActiveFaq] = useState(0)
   const [form, setForm] = useState({ name: '', email: '', amount: '100', frequency: 'MONTHLY' })
-  const [chatOpen, setChatOpen] = useState(false)
-  const [chatCommitment, setChatCommitment] = useState({ amount: 100, frequency: 'MONTHLY' })
-  const [chatMeta, setChatMeta] = useState(null)
   const [submitStatus, setSubmitStatus] = useState('')
 
   const selected = testimonials[selectedTestimonial]
@@ -625,33 +434,8 @@ function HomePage({ onNewChatStarted, onDonorMessage }) {
       return
     }
 
-    const commitment = { amount: Number(form.amount), frequency: form.frequency }
-    const preview = `I’d like to support The Haven with a ${form.frequency.toLowerCase()} donation of ${formatCurrency(Number(form.amount))}.`
-    const createdChat = await onNewChatStarted({
-      donor: form.name,
-      email: form.email,
-      phone: '+1 (000) 000-0000',
-      amount: Number(form.amount),
-      frequency: form.frequency,
-      preview,
-      message: preview,
-    })
-
-    setChatCommitment(commitment)
-    setChatMeta(createdChat || {
-      id: `CHAT-${Date.now()}`,
-      donor: form.name,
-      email: form.email,
-      phone: '+1 (000) 000-0000',
-      status: 'WAITING FOR REPRESENTATIVE',
-      amount: Number(form.amount),
-      frequency: form.frequency,
-      lastUpdated: 'Just now',
-      preview,
-      messages: [{ sender: 'donor', text: preview, time: 'Now' }],
-    })
-    setSubmitStatus('')
-    setChatOpen(true)
+    // Live chat removed: preserve donation submission behavior without opening chat
+    setSubmitStatus('Thank you — we will follow up via email regarding your donation.')
   }
 
   const containerClass = useMemo(
@@ -1012,18 +796,7 @@ function HomePage({ onNewChatStarted, onDonorMessage }) {
         </section>
       </main>
 
-      {chatOpen && chatMeta && (
-        <div className="chat-overlay">
-          <DonationChat
-            commitment={chatCommitment}
-            donorName={form.name}
-            chatId={chatMeta.id}
-            initialMessages={chatMeta.messages}
-            onSendMessage={(chatId, text) => onDonorMessage(chatId, text)}
-            onClose={() => setChatOpen(false)}
-          />
-        </div>
-      )}
+      {/* Live chat removed */}
     </>
   )
 }
@@ -1164,31 +937,12 @@ function ContactPage() {
   )
 }
 
-function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChatAction, adminSession, onLogin, onLogout }) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('ALL')
+function AdminPage({ adminSession, onLogin, onLogout }) {
   const [adminLogin, setAdminLogin] = useState({ email: '', password: '' })
-  const [replyText, setReplyText] = useState('Thank you for your support. We can provide secure payment instructions and confirm the donation details before completion.')
   const [loginError, setLoginError] = useState('')
   const [loggingIn, setLoggingIn] = useState(false)
 
-  const filteredChats = chatQueue.filter((chat) => {
-    const matchesStatus = statusFilter === 'ALL' || chat.status === statusFilter
-    const normalizedQuery = searchTerm.toLowerCase()
-    const matchesSearch = !normalizedQuery || [chat.donor, chat.email, chat.status, chat.frequency, String(chat.amount)].join(' ').toLowerCase().includes(normalizedQuery)
-    return matchesStatus && matchesSearch
-  })
-
-  const selectedChat = filteredChats.find((chat) => chat.id === selectedChatId) || chatQueue.find((chat) => chat.id === selectedChatId) || chatQueue[0]
-
-  const stats = {
-    new: chatQueue.filter((chat) => chat.status === 'NEW').length,
-    waiting: chatQueue.filter((chat) => chat.status === 'WAITING FOR REPRESENTATIVE').length,
-    active: chatQueue.filter((chat) => chat.status === 'IN PROGRESS').length,
-    pending: chatQueue.filter((chat) => chat.status === 'PAYMENT PENDING').length,
-    completed: chatQueue.filter((chat) => chat.status === 'COMPLETED').length,
-    closed: chatQueue.filter((chat) => chat.status === 'CLOSED').length,
-  }
+  const stats = adminStats
 
   if (!adminSession.loggedIn) {
     return (
@@ -1239,19 +993,19 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
       <section className="page-hero admin-hero">
         <div className="container">
           <span className="eyebrow light">Administration</span>
-          <h1>Customer Support Dashboard</h1>
+          <h1>Administrator Dashboard</h1>
         </div>
       </section>
 
       <section className="section section-soft">
         <div className="container admin-grid dashboard-grid">
           {[
-            ['New', stats.new],
-            ['Waiting', stats.waiting],
-            ['Active', stats.active],
-            ['Pending', stats.pending],
-            ['Completed', stats.completed],
-            ['Closed', stats.closed],
+            ['Total Donations', adminStats[0].value],
+            ['Monthly Donations', adminStats[1].value],
+            ['One-Time Donations', adminStats[2].value],
+            ['Number of Donors', adminStats[3].value],
+            ['Average Donation', adminStats[4].value],
+            ['Recent Donations', adminStats[5].value],
           ].map(([label, value]) => (
             <div key={label} className="admin-stat-card">
               <span>{label}</span>
@@ -1262,126 +1016,20 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
       </section>
 
       <section className="section">
-        <div className="container dashboard-layout">
-          <aside className="queue-panel">
-            <div className="queue-header">
-              <h3>Incoming Donation Chats</h3>
-              <span className="status-badge">{chatQueue.length} Active</span>
-            </div>
-
-            <div className="queue-toolbar">
-              <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search donor, email, amount..." />
-              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                <option value="ALL">All statuses</option>
-                {['NEW', 'WAITING FOR REPRESENTATIVE', 'IN PROGRESS', 'PAYMENT PENDING', 'COMPLETED', 'CLOSED'].map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-
-            {filteredChats.length === 0 ? (
-              <div className="empty-state">No conversations match this search or filter.</div>
-            ) : (
-              filteredChats.map((chat) => (
-                <button key={chat.id} type="button" className={`queue-item ${selectedChat?.id === chat.id ? 'active' : ''}`} onClick={() => onSelectChat(chat.id)}>
-                  <div className="queue-topline">
-                    <strong>{chat.donor}</strong>
-                    <span>{chat.status}</span>
-                  </div>
-                  <p>{chat.preview}</p>
-                  <div className="queue-meta">
-                    <span>{chat.amount > 0 ? formatCurrency(chat.amount) : '$0 USD'}</span>
-                    <span>{chat.frequency}</span>
-                  </div>
-                  <div className="queue-meta subtle-meta">
-                    <span>{chat.email}</span>
-                    <span>{chat.lastUpdated}</span>
-                  </div>
-                </button>
-              ))
-            )}
-          </aside>
-
-          {selectedChat ? (
-            <div className="rep-chat-panel">
-              <div className="rep-chat-header">
-                <div>
-                  <span className="eyebrow">Donation Conversation</span>
-                  <h3>{selectedChat.donor}</h3>
-                </div>
-                <div className="rep-actions">
-                  <span className="status-badge">{selectedChat.status}</span>
-                  <button type="button" className="button button-secondary" onClick={onLogout}>Sign Out</button>
-                </div>
-              </div>
-
-              <div className="commitment-box">
-                <span>Donation Commitment</span>
-                <strong>{formatCurrency(selectedChat.amount)}</strong>
-                <small>{selectedChat.frequency}</small>
-              </div>
-
-              <div className="donor-profile-grid">
-                <div>
-                  <span>Customer</span>
-                  <strong>{selectedChat.donor}</strong>
-                </div>
-                <div>
-                  <span>Email</span>
-                  <strong>{selectedChat.email}</strong>
-                </div>
-                <div>
-                  <span>Phone</span>
-                  <strong>{selectedChat.phone}</strong>
-                </div>
-                <div>
-                  <span>Representative</span>
-                  <strong>Naomi Martin</strong>
-                </div>
-              </div>
-
-              <div className="chat-control-strip">
-                <button type="button" className="chip-button" onClick={() => onChatAction(selectedChat.id, 'WAITING FOR REPRESENTATIVE')}>Waiting</button>
-                <button type="button" className="chip-button" onClick={() => onChatAction(selectedChat.id, 'IN PROGRESS')}>In Progress</button>
-                <button type="button" className="chip-button" onClick={() => onChatAction(selectedChat.id, 'PAYMENT PENDING')}>Payment Pending</button>
-                <button type="button" className="chip-button" onClick={() => onChatAction(selectedChat.id, 'COMPLETED')}>Completed</button>
-                <button type="button" className="chip-button" onClick={() => onChatAction(selectedChat.id, 'CLOSED')}>Closed</button>
-              </div>
-
-              <div className="rep-message-list">
-                {selectedChat.messages.map((message, index) => (
-                  <div key={`${message.sender}-${index}`} className={`rep-message ${message.sender}`}>
-                    <p>{message.text}</p>
-                    <time>{message.time}</time>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rep-reply-box">
-                <textarea value={replyText} onChange={(event) => setReplyText(event.target.value)} rows="4" />
-                <div className="reply-actions">
-                  <button type="button" className="button button-secondary" onClick={() => onChatAction(selectedChat.id, 'PAYMENT PENDING')}>Request payment details</button>
-                  <button type="button" className="button button-secondary" onClick={() => onChatAction(selectedChat.id, 'WAITING FOR REPRESENTATIVE')}>Send secure instructions</button>
-                  <button type="button" className="button button-primary" onClick={() => onAddReply(selectedChat.id, replyText)}>Send Response</button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="rep-chat-panel empty-chat-panel">
-              <p>Select a conversation to view donor details and reply.</p>
-            </div>
-          )}
+        <div className="container">
+          <div className="admin-actions">
+            <p>All live-chat functionality has been removed. Incoming support messages are delivered to the official inbox:</p>
+            <p><strong>{OFFICIAL_EMAIL}</strong></p>
+            <button type="button" className="button button-secondary" onClick={onLogout}>Sign Out</button>
+          </div>
         </div>
       </section>
     </main>
   )
 }
 
-function DonatePage({ onNewChatStarted, onDonorMessage }) {
+function DonatePage() {
   const [form, setForm] = useState({ name: '', email: '', amount: '100', frequency: 'MONTHLY' })
-  const [chatOpen, setChatOpen] = useState(false)
-  const [chatCommitment, setChatCommitment] = useState({ amount: 100, frequency: 'MONTHLY' })
-  const [chatMeta, setChatMeta] = useState(null)
   const [submitStatus, setSubmitStatus] = useState('')
 
   const handleFieldChange = (event) => {
@@ -1396,33 +1044,8 @@ function DonatePage({ onNewChatStarted, onDonorMessage }) {
       return
     }
 
-    const commitment = { amount: Number(form.amount), frequency: form.frequency }
-    const preview = `I’d like to support The Haven with a ${form.frequency.toLowerCase()} donation of ${formatCurrency(Number(form.amount))}.`
-    const createdChat = await onNewChatStarted({
-      donor: form.name,
-      email: form.email,
-      phone: '+1 (000) 000-0000',
-      amount: Number(form.amount),
-      frequency: form.frequency,
-      preview,
-      message: preview,
-    })
-
-    setChatCommitment(commitment)
-    setChatMeta(createdChat || {
-      id: `CHAT-${Date.now()}`,
-      donor: form.name,
-      email: form.email,
-      phone: '+1 (000) 000-0000',
-      status: 'WAITING FOR REPRESENTATIVE',
-      amount: Number(form.amount),
-      frequency: form.frequency,
-      lastUpdated: 'Just now',
-      preview,
-      messages: [{ sender: 'donor', text: preview, time: 'Now' }],
-    })
-    setSubmitStatus('')
-    setChatOpen(true)
+    // Preserve donation submission behavior without live chat
+    setSubmitStatus('Thank you — we will follow up via email regarding your donation.')
   }
 
   return (
@@ -1511,18 +1134,7 @@ function DonatePage({ onNewChatStarted, onDonorMessage }) {
         </div>
       </section>
 
-      {chatOpen && chatMeta && (
-        <div className="chat-overlay">
-          <DonationChat
-            commitment={chatCommitment}
-            donorName={form.name}
-            chatId={chatMeta.id}
-            initialMessages={chatMeta.messages}
-            onSendMessage={(chatId, text) => onDonorMessage(chatId, text)}
-            onClose={() => setChatOpen(false)}
-          />
-        </div>
-      )}
+      {/* Live chat removed */}
     </main>
   )
 }
@@ -1540,32 +1152,11 @@ function NotFoundPage() {
 }
 
 function App() {
-  const [chatQueue, setChatQueue] = useState(representativeChats)
-  const [selectedChatId, setSelectedChatId] = useState(representativeChats[0]?.id || '')
+  // Live chat system removed — no chatQueue or selectedChatId
   const [adminSession, setAdminSession] = useState({ loggedIn: false, user: '', token: '' })
 
-  const loadAdminConversations = async (token) => {
-    if (!token) return
-
-    try {
-      const response = await fetch(`${API_BASE}/api/admin/conversations`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (!response.ok) {
-        throw new Error('Unable to load admin conversations.')
-      }
-
-      const payload = await response.json()
-      const normalized = (payload.conversations || []).map(normalizeConversation)
-      setChatQueue(normalized)
-      if (normalized[0]) setSelectedChatId(normalized[0].id)
-    } catch (error) {
-      console.error('Failed to load admin queue:', error)
-    }
-  }
-
   useEffect(() => {
+    // Restore admin session from cache (chat removed)
     const cachedSession = localStorage.getItem('the-haven-admin-session')
     if (!cachedSession) return
 
@@ -1582,159 +1173,15 @@ function App() {
   useEffect(() => {
     if (!adminSession.loggedIn || !adminSession.token) return
     localStorage.setItem('the-haven-admin-session', JSON.stringify(adminSession))
-    loadAdminConversations(adminSession.token)
   }, [adminSession.loggedIn, adminSession.token])
 
-  useEffect(() => {
-    const socket = new WebSocket(import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? 'ws://localhost:4001' : 'wss://thehaven.onrender.com'))
+  // Chat endpoints removed; donor conversation creation handled by contact form / backend separately
 
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data)
-        if (!payload || payload.type !== 'chat:update' || !payload.conversation) return
+  // Donor message API removed from client
 
-        const normalized = normalizeConversation(payload.conversation)
-        setChatQueue((current) => {
-          const next = [...current]
-          const index = next.findIndex((chat) => chat.id === normalized.id)
-          if (index >= 0) next[index] = normalized
-          else next.unshift(normalized)
-          return next.sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0))
-        })
-      } catch (error) {
-        console.error('Socket message error:', error)
-      }
-    }
+  // Admin reply API removed (chat removed)
 
-    return () => socket.close()
-  }, [])
-
-  const handleNewChatStarted = async (newChat) => {
-    const payload = {
-      customer_name: newChat.donor,
-      customer_email: newChat.email,
-      customer_phone: newChat.phone || '',
-      donation_amount: Number(newChat.amount || 0),
-      donation_currency: 'USD',
-      donation_frequency: newChat.frequency || 'MONTHLY',
-      first_message: newChat.message || newChat.preview || 'I would like to support The Haven.',
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/api/chat/conversations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) {
-        throw new Error('Unable to create conversation.')
-      }
-
-      const createdConversation = normalizeConversation(await response.json())
-      setChatQueue((current) => [createdConversation, ...current.filter((chat) => chat.id !== createdConversation.id)])
-      setSelectedChatId(createdConversation.id)
-      return createdConversation
-    } catch (error) {
-      console.error('Failed to create donor chat:', error)
-      return null
-    }
-  }
-
-  const handleDonorMessage = async (chatId, text) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/chat/conversations/${chatId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sender_type: 'CUSTOMER',
-          sender_id: `customer-${chatId}`,
-          message: text,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Unable to save donor message.')
-      }
-
-      const payload = await response.json()
-      if (payload?.conversation) {
-        const normalized = normalizeConversation(payload.conversation)
-        setChatQueue((current) => {
-          const next = [...current]
-          const index = next.findIndex((chat) => chat.id === normalized.id)
-          if (index >= 0) next[index] = normalized
-          else next.unshift(normalized)
-          return next
-        })
-      }
-    } catch (error) {
-      console.error('Failed to send donor message:', error)
-    }
-  }
-
-  const handleAdminReply = async (chatId, text) => {
-    if (!adminSession.token) return
-
-    try {
-      const response = await fetch(`${API_BASE}/api/admin/conversations/${chatId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminSession.token}`,
-        },
-        body: JSON.stringify({ message: text }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Unable to send admin response.')
-      }
-
-      const payload = await response.json()
-      if (payload?.conversation) {
-        const normalized = normalizeConversation(payload.conversation)
-        setChatQueue((current) => {
-          const next = [...current]
-          const index = next.findIndex((chat) => chat.id === normalized.id)
-          if (index >= 0) next[index] = normalized
-          else next.unshift(normalized)
-          return next
-        })
-      }
-    } catch (error) {
-      console.error('Failed to send admin reply:', error)
-    }
-  }
-
-  const handleStatusUpdate = async (chatId, nextStatus) => {
-    if (!adminSession.token) return
-
-    try {
-      const response = await fetch(`${API_BASE}/api/admin/conversations/${chatId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminSession.token}`,
-        },
-        body: JSON.stringify({ status: nextStatus }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Unable to update conversation status.')
-      }
-
-      const updatedConversation = normalizeConversation(await response.json())
-      setChatQueue((current) => {
-        const next = [...current]
-        const index = next.findIndex((chat) => chat.id === updatedConversation.id)
-        if (index >= 0) next[index] = updatedConversation
-        else next.unshift(updatedConversation)
-        return next
-      })
-    } catch (error) {
-      console.error('Failed to update chat status:', error)
-    }
-  }
+  // Chat status API removed
 
   const handleLogin = async (email, password) => {
     if (!email || !password) return false
@@ -1773,12 +1220,12 @@ function App() {
       <div className="site-shell">
         <Navbar />
         <Routes>
-          <Route path="/" element={<HomePage onNewChatStarted={handleNewChatStarted} onDonorMessage={handleDonorMessage} />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/contact" element={<ContactPage />} />
-          <Route path="/donate" element={<DonatePage onNewChatStarted={handleNewChatStarted} onDonorMessage={handleDonorMessage} />} />
-          <Route path="/admin" element={<AdminPage chatQueue={chatQueue} selectedChatId={selectedChatId} onSelectChat={setSelectedChatId} onAddReply={handleAdminReply} onChatAction={handleStatusUpdate} adminSession={adminSession} onLogin={handleLogin} onLogout={handleLogout} />} />
+          <Route path="/donate" element={<DonatePage />} />
+          <Route path="/admin" element={<AdminPage adminSession={adminSession} onLogin={handleLogin} onLogout={handleLogout} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Footer />
