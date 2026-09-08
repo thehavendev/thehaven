@@ -476,22 +476,21 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.story-card,
-.program-card,
-.involved-card,
-.value-card,
-.article-card,
-.admin-stat-card,
-.support-panel,
-.info-card,
-.map-placeholder,
-.testimonial-card,
-.chart-card,
-.donation-panel,
-.impact-card,
-.confirmation-card,
-.contact-form,
-.admin-summary-card {
+story-card,
+program-card,
+involved-card,
+value-card,
+article-card,
+admin-stat-card,
+info-card,
+map-placeholder,
+testimonial-card,
+chart-card,
+donation-panel,
+impact-card,
+confirmation-card,
+contact-form,
+admin-summary-card {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(18, 42, 33, 0.08);
   border-radius: 26px;
@@ -615,9 +614,8 @@ button {
   gap: 20px;
 }
 
-.donation-form label,
-.contact-form label,
-.support-form label {
+donation-form label,
+contact-form label {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -630,9 +628,6 @@ button {
 .donation-form select,
 .contact-form input,
 .contact-form textarea,
-.support-form input,
-.support-form textarea,
-.support-form select,
 .newsletter-form input {
   width: 100%;
   box-sizing: border-box;
