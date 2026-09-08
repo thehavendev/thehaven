@@ -1205,80 +1205,7 @@ button {
   gap: 12px;
 }
 
-.support-fab {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 70;
-  border-radius: 999px;
-  border: none;
-  background: var(--color-forest);
-  color: white;
-  padding: 0.9rem 1.4rem;
-  box-shadow: var(--shadow-soft);
-}
-
-.support-panel {
-  position: fixed;
-  right: 24px;
-  bottom: 86px;
-  z-index: 71;
-  width: min(420px, calc(100vw - 28px));
-  padding: 22px;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 1rem;
-}
-
-.panel-header h3 {
-  margin: 0.2rem 0 0;
-  color: var(--color-forest);
-}
-
-.close-button {
-  border: none;
-  background: rgba(17, 52, 41, 0.06);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  color: var(--color-forest);
-}
-
-.support-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 1rem;
-}
-
-.support-options button {
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(18, 42, 33, 0.12);
-  background: rgba(17, 52, 41, 0.04);
-  color: var(--color-forest);
-}
-
-.support-options button.selected {
-  background: rgba(172, 138, 71, 0.12);
-}
-
-.support-form {
-  display: grid;
-  gap: 14px;
-}
-
-.support-contact {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(18, 42, 33, 0.08);
-  color: rgba(18, 42, 33, 0.75);
-}
+/* Support panel styles removed — UI uses tawk.to widget now. */
 
 .chat-status-banner,
 .chat-security-note,
@@ -2014,15 +1941,5 @@ button {
     padding-top: 40px;
   }
 
-  .support-fab {
-    right: 14px;
-    bottom: 14px;
-  }
-
-  .support-panel {
-    right: 14px;
-    left: 14px;
-    width: auto;
-    bottom: 80px;
-  }
+  /* Support panel responsive tweaks removed. */
 }
