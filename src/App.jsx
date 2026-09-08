@@ -159,7 +159,7 @@ const adminStats = [
   { label: 'Recent Donations', value: '17' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:4001' : window.location.origin)
+const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:4001' : 'https://thehaven.onrender.com')
 
 const representativeChats = [
   {
@@ -1169,6 +1169,8 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [adminLogin, setAdminLogin] = useState({ email: '', password: '' })
   const [replyText, setReplyText] = useState('Thank you for your support. We can provide secure payment instructions and confirm the donation details before completion.')
+  const [loginError, setLoginError] = useState('')
+  const [loggingIn, setLoggingIn] = useState(false)
 
   const filteredChats = chatQueue.filter((chat) => {
     const matchesStatus = statusFilter === 'ALL' || chat.status === statusFilter
@@ -1189,9 +1191,6 @@ function AdminPage({ chatQueue, selectedChatId, onSelectChat, onAddReply, onChat
   }
 
   if (!adminSession.loggedIn) {
-    const [loginError, setLoginError] = useState('')
-    const [loggingIn, setLoggingIn] = useState(false)
-
     return (
       <main className="page-shell admin-login-shell">
         <section className="container admin-login-wrap">
@@ -1587,7 +1586,7 @@ function App() {
   }, [adminSession.loggedIn, adminSession.token])
 
   useEffect(() => {
-    const socket = new WebSocket(import.meta.env.VITE_WS_URL || API_BASE.replace(/^http/, 'ws'))
+    const socket = new WebSocket(import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? 'ws://localhost:4001' : 'wss://thehaven.onrender.com'))
 
     socket.onmessage = (event) => {
       try {
