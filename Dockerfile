@@ -12,7 +12,8 @@ RUN npm ci --omit=dev
 # Copy application
 COPY . ./
 
-# Create non-root user
+# Create data directory and non-root user
+RUN mkdir -p /app/data
 RUN addgroup -S app && adduser -S app -G app
 RUN chown -R app:app /app
 
