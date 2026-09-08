@@ -337,80 +337,7 @@ function Footer() {
   )
 }
 
-function SupportPanel() {
-  const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: 'Ask a Question', message: '' })
-
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: value }))
-  }
-
-  return (
-    <>
-      <button type="button" className="support-fab" onClick={() => setOpen((value) => !value)}>
-        Support
-      </button>
-
-      {open && (
-        <aside className="support-panel" aria-label="Support panel">
-          <div className="panel-header">
-            <div>
-              <span className="eyebrow">Need help?</span>
-              <h3>Contact The Haven</h3>
-            </div>
-            <button type="button" className="close-button" onClick={() => setOpen(false)}>
-              ×
-            </button>
-          </div>
-
-          <div className="support-options">
-            {['Ask a Question', 'Donation Support', 'Volunteer Support', 'Partnership Inquiry', 'General Support'].map((option) => (
-              <button key={option} type="button" className={form.subject === option ? 'selected' : ''} onClick={() => setForm((current) => ({ ...current, subject: option }))}>
-                {option}
-              </button>
-            ))}
-          </div>
-
-          <form className="support-form">
-            <label>
-              Full Name
-              <input name="name" value={form.name} onChange={handleChange} required />
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" value={form.email} onChange={handleChange} required />
-            </label>
-            <label>
-              Phone
-              <input name="phone" value={form.phone} onChange={handleChange} />
-            </label>
-            <label>
-              Subject
-              <select name="subject" value={form.subject} onChange={handleChange}>
-                {['Ask a Question', 'Donation Support', 'Volunteer Support', 'Partnership Inquiry', 'General Support'].map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Message
-              <textarea name="message" value={form.message} onChange={handleChange} rows="4" required />
-            </label>
-            <button type="submit" className="button button-primary full-width">Send Message</button>
-          </form>
-
-          <div className="support-contact">
-            <p>Email: {OFFICIAL_EMAIL}</p>
-            <p>Phone: +1 (555) 219-8946</p>
-            <p>Office: 145 Willow Lane, Portland, OR</p>
-            <p>Opening Hours: Mon–Fri, 9:00 AM–5:00 PM</p>
-          </div>
-        </aside>
-      )}
-    </>
-  )
-}
+// Support panel removed — official tawk.to widget used for live support.
 
 // DonationChat removed (custom live-chat system disabled)
 
@@ -1229,7 +1156,6 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Footer />
-        <SupportPanel />
       </div>
     </BrowserRouter>
   )
