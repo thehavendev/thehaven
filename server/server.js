@@ -219,6 +219,15 @@ app.post('/api/auth/admin/login', (req, res) => {
   }
 
   if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+    // Log failed admin login attempt (do NOT store passwords)
+    try {
+      db.prepare(`INSERT INTO admin_logs (id, admin_email, action, details, created_at) VALUES (?, ?, ?, ?, ?)`)
+        .run(randomUUID(), email || 'unknown', 'login-failed', JSON.stringify({ ip: req.ip || '' }), new Date().toISOString())
+    } catch (e) {
+      console.error('Failed to write failed-login admin log', e)
+    }
+
+    console.warn(`Admin login failed for ${email} from ${req.ip || 'unknown'}`)
     return res.status(401).json({ error: 'Invalid administrator credentials.' })
   }
 
